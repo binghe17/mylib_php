@@ -1,0 +1,82 @@
+PHP PDO使用新手入门教程（附代码示例）2010-11-16 16:45        也忘记哪天从哪个网站上看，说是PDO是大势所趋，于是就开始学习了，并且一直使用到现在，感觉很不错，今天给新手们写个入门引导，懂的人可以无视。
+什么是PDO？
+我不给大家讲定义，就是给大家我的看法，我认为PDO就是PHP官方提供的、面向对象的、用来操作数据库的扩展。PDO不单可以访问Mysql，好像一般 的数据库都行，只要装上对应的扩展就可以了，一般用PHP的都是Mysql，所以我只装了Mysql的。
+如何如何安装PDO？
+和安装别的PHP扩展一样，windows简单，在php.ini载入对应的dll文件就行了。linux还要麻烦一点，需要编译一下。
+为什么要使用PDO？
+首先它是面向对象的，面向对象的好处不必多说。
+其次PDO用起来方便、安全，很多时候是会自动过滤特殊符号的，就不必你操心了。
+PDO为多种数据库的访问提供同样的接口，以后网站要换个数据库就方便很多，也不用学习其他类了。
+PDO的使用方法简介：
+
+建议：使用PDO，可把magic_quotes_gpc设置关闭，使用PDO本身过滤字符串的功能。
+
+第一步、创建PDO实例
+代码形式：$obj = new PDO('mysql:host=localhost;dbname=数据库名' , 用户名 , 密码);
+代码示例：$obj = new PDO('mysql:host=localhost;dbname=localhost' ,  'root'  ,  '123456');
+这样我们就有了一个PDO的实例了，也就可以使用该实例的对应方法了
+
+第二步、设置参数
+
+代码形式： $obj ->setAttribute(参数名称 , 参数值);
+代码示例： $obj->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+示例的意思就是说，当PDO执行出现错误的时候以抛出异常的形式报错，个人建议用这样的方式，然后把所有数据库操作放在try里，非常方便，不懂可以去看PHP异常处理方面的文章。
+PDO的设置的参数有：
+PDO::ATTR_CASE
+PDO::ATTR_ERRMODE
+PDO::ATTR_ORACLE_NULLS
+PDO::ATTR_STRINGIFY_FETCHES
+PDO::ATTR_STATEMENT_CLASS
+        PDO::ATTR_AUTOCOMMIT 
+PDO::MYSQL_ATTR_USE_BUFFERED_QUERY
+PDO::ATTR_DEFAULT_FETCH_MODE 等
+由于篇幅限制，各个参数都代表什么，都可以设置什么值，我就不一一介绍了，找本手册，上面有。
+
+第三步、执行一般操作
+
+代码形式： $obj ->exec(SQL语句);
+代码示例： $obj ->exec('SET NAMES UTF8');
+这个函数会返回受影响的行数。
+
+第四步、特殊字符过滤
+
+当您自己构造SQL语句，就需要将一些敏感的字符过滤一下，就是类似AddSlashes函数。
+代码形式： 过滤后的字符串 = $obj ->quote(字符串);
+
+第五步、PDOStatement操作
+PDOStatement是另一个类，其实例可以由PDO实例的prepare或query方法生成，通常我们操作数据库都是用这个类，而不是直接用PDO类，这个类方法很完善，也很安全。
+例如，我们现在创建一个PDOStatement可以这样（$obj 为PDO实例）：
+$ps = $obj->prepare("SELECT * FROM `article` WHERE `id` = 1");
+这个时候，$ps就是一个 PDOStatement类的实例，我们就可以使用对应的方法了。prepare函数执行之后，其实并没有向数据库提交任何请求，也就是说sql语句还没 有执行，只是“准备”好了一个SQL语句，你需要调用$ps 的 execute方法，才真正的执行，
+所以我们要这样：$ps->execute(); 
+而PDO的query方法，就相当于先prepare，得到实例后再execute，
+所以，如果代码这样写（$obj 为PDO实例）：
+$ps = $obj->query("SELECT * FROM `article` WHERE `id` = 1");
+这样就不用再执行execute了，SQL语句已经被执行了，但这个方法和prepare方法一样，都返回一个PDOStatement类的实例。
+既然PDO实例的prepare方法比query方法要多一步，为什么不直接用query呢？parepare还有什么用呢？
+用处可大了，事实上我们大多数情况，都是用prepare，而不是query，原因就是prepare可以写带”参数“的sql语句。
+例如 $ps = $obj->prepare("SELECT * FROM `article` WHERE `id` = ?");
+大家看到区别了吗？我后面那个`id` = 1, 换乘 `id` = ?了，这个问号就代表一个参数，这个参数是可以修改的。
+例如我们这样写  $ps->bindValue(1 , 10); 
+这句代码的意思就是把sql语句中的第一个问号，替换成10，这样一来，我们执行$ps->execute(); 实际上是执行了 SELECT * FROM `article` WHERE `id` = 10。
+需要注意的是，bindValue这里的第二个参数已经过滤的敏感字符，无需再次过滤，更不需要加引号什么的，直接用字符串或数字的值就行。
+执行查询语句之后，我们可以通过fetch或fetchAll函数来获得查询结果，两个函数，一个是返回一条记录，一个是返回所有记录。
+
+我说了一大堆，也不知道说清楚没有，写一个完整的实例吧。
+
+<?php
+try{
+$obj = new PDO('mysql:host=localhost;dbname=localhost' ,  'root'  ,  '123456');//生成PDO示例
+$obj ->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);//设置以异常的形式报错
+$obj ->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE , PDO::FETCH_ASSOC );//设置fetch时返回数据形式为数组
+$ps = $obj->prepare("SELECT *  FROM `article` WHERE `type` = ? and `menu` = ?");//生成一个PDOStatement实例
+$ps->bindValue(1 , "文章");//第一个？处的参数换成 文章，不需要附加任何处理
+$ps->bindValue(2 , 2);//第二个？处的参数换成2，不需要附加任何处理
+$ps->execute(); //正式执行。
+$res = $ps->fetchAll();//得到查询结果
+} catch(Exception $e){
+exit($e->getMessage());
+}
+?>
+
+这里讲的都是PDO通常操作数据库常用到的方法，肯定不是全面的，具体的可以到手册里查，写的都很清楚，我写这篇文章的目的就是让想学习PDO的新手们，能够较快的对PDO有一个全面的了解，更容易入门，如果有错谬之错，欢迎指正，转载请注明原作者：网店货源网(www.wodianer.com)。 

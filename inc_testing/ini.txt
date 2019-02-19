@@ -1,0 +1,17 @@
+; 分号是注释
+; 键名 = 键值
+
+[first_section]
+one = 1 		;类型都是字符串
+five = 5
+animal = BIRD 	;常量，有定义的话被替换
+
+[second_section]
+path = "/usr/local/bin"
+URL = "http://www.example.com/~username"
+
+[third_section]
+phpversion[] = "5.0"
+phpversion[] = "5.1"
+phpversion[] = "5.2"
+phpversion[] = "5.3"

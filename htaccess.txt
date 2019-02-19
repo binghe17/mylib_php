@@ -1,0 +1,220 @@
+htaccess 防止盗链，防止目录浏览等10大技巧
+
+1. 反盗链
+那些盗用了你的内容，还不愿意自己存储图片的网站是无耻的。你可以通过以下配置来放置别人盗用你的图片：
+ 
+1 RewriteBase /
+2 RewriteCond %{HTTP_REFERER} !^$
+3 RewriteCond %{HTTP_REFERER} !^http://(www.)?yoursite.com/.*$ [NC]
+4 RewriteRule .(gif|jpg|swf|flv|png)$ /feed/ [R=302,L]
+
+
+2. 防止目录浏览
+有时候目录浏览是有用的，但大部分情况会有安全问题。为了让你的网站更安全，你可以通过htaccess文件来禁用这个功能：
+ 
+1 Options All -Indexes
+
+
+3. SEO友好的301永久重定向
+这一招是我常用的。每次我更改网站URL结构的时候，我都会做301重定向：
+ 
+1 Redirect 301 http://www.yoursite.com/article.html http://www.yoursite.com/archives/article
+
+
+4. 显示个性化的 404 错误页面
+当用户访问了一个不存在的页面的时候，网页服务器会显示“404 file not found”错误。有很多CMS可以让你设置自定义的错误页面，但最简单的方法是更改htaccess：
+ 
+1 ErrorDocument 404 /404.html
+
+
+5. 设置目录的默认页面
+假如你需要为不同的目录设置不同的默认页面，你可以很容易的通过 .htaccess 实现：
+ 
+1 DirectoryIndex about.html
+
+
+6. 基于referer来限制网站访问
+站长通常不会限制网站访问，但是当你发现有一些网站尽给你带来垃圾流量的话，你就应该屏蔽他们：
+ 
+1 <IfModule mod_rewrite.c>
+2 RewriteEngine on  RewriteCond %{HTTP_REFERER} spamteam.com [NC,OR]
+3 RewriteCond %{HTTP_REFERER} trollteam.com [NC,OR]
+4 RewriteRule .* – [F]
+5 </ifModule>
+7. 限制PHP上传文件大小
+这招在共享空间的服务器上很有用，可以让我的用户上传更大的文件。第一个是设置最大的上传文件大小，第二个是设置最大的POST请求大小，第三个PHP脚本最长的执行时间，最后一个是脚本解析上传文件的最长时间：
+ 
+1 php_value upload_max_filesize 20M
+2 php_value post_max_size 20M
+3 php_value max_execution_time 200
+4 php_value max_input_time 200
+
+
+8. 压缩文件
+你可以通过压缩文件来减少网络流量，也页面装载时间：
+ 
+1 AddOutputFilterByType DEFLATE text/plain
+2 AddOutputFilterByType DEFLATE text/html
+3 AddOutputFilterByType DEFLATE text/xml
+4 AddOutputFilterByType DEFLATE text/css
+5 AddOutputFilterByType DEFLATE application/xml
+6 AddOutputFilterByType DEFLATE application/xhtml+xml
+7 AddOutputFilterByType DEFLATE application/rss+xml
+8 AddOutputFilterByType DEFLATE application/javascript
+9 AddOutputFilterByType DEFLATE application/x-javascript
+
+
+9. 缓存文件
+这一点还需要解释吗？
+ 
+1 <FilesMatch “.(flv|gif|jpg|jpeg|png|ico|swf|js|css|pdf)$”>
+2 Header set Cache-Control “max-age=2592000″
+3 </FilesMatch>
+10. 添加尾部的反斜杠
+我并不确定，但是很多文章，很多人都说添加尾部反斜杠有益于SEO：
+ 
+1 <IfModule mod_rewrite.c>
+2 RewriteCond %{REQUEST_URI} /+[^\.]+$
+3 RewriteRule ^(.+[^/])$ %{REQUEST_URI}/ [R=301,L]
+4 </IfModule>
+
+ 
+
+摘自  PainsOnline的专栏  
+
+
+---------------------------------------------------------------------
+Apache禁止目录访问方法介绍
+
+
+　在PHP网站开发中，基于WEB服务器和PHP网站程序代码的安全考虑，我们需要对相关的目录或者文件访问权限进行控制，以防止意外情况的发生，那么我们如何来实现这种功能呢？我们可以通过Apache来实现禁止目录访问(禁止游览列出的目录或文件列表)、禁止或允许IP与域名访问目录的功能。
+
+环境说明
+
+　　我使用的是DedeCMS DedeAmpz的PHP运行环境，PHP版本5.2.4，Apache版本2.2.4
+
+在Apache中配置禁止目录访问，即禁止游览列出的目录/文件列表的方法
+
+　　访问网站目录时Apache默认配置为可列出目录/文件列表，即当你访问http://localhost时会列出相关的目录和文件列表，我们可以通过修改Apache配置文件httpd.conf来实现禁止列出目录/文件列表，方法如下：
+
+1、打开apache配置文件httpd.conf
+
+2、找到
+
+ <Directory />
+Options Indexes
+AllowOverride None
+Order allow,deny
+Allow from all
+</Directory> 
+
+只需要修改Options Indexes为Options None即可，注：根据PHP运行环境安装包的不同，Options Indexes也有可能是Options Indexes FollowSymLinks，一并改为Options None即可。
+
+3、保存httpd.conf，并重启Apache即可，此时再访问http://localhost时， 报apache http 403 禁止访问错误信息
+
+　　Forbidden
+
+　　You don’t have permission to access / on this server.
+
+Apache单个或多个目录禁止访问方法
+
+　　这种方法通常用来禁止访问者访问后台管理目录或者程序目录，方法如下
+
+1、打开apache配置文件httpd.conf
+
+2、创建Directory块，比如禁止访问某个类库目录，可以这样实现
+
+ <Directory /var/www/www.leapsoul.cn/inc>
+    Order Deny,Allow
+    Deny from all
+</Directory> 
+
+上述代码实现了禁止所有用户访问www.leapsoul.cn下inc目录的功能。如要实现禁止访问所有目录中inc目录的功能，只要将
+
+ <Directory /var/www/www.leapsoul.cn/inc> 
+
+更改为
+
+ <Directory /var/www/www.leapsoul.cn/*/inc> 
+
+即可。
+
+3、重启Apache服务器。
+
+其他说明
+
+1、只允许或禁止某个域名进行目录访问
+
+ <Directory /var/www/www.leapsoul.cn/inc>
+    Order Deny,Allow
+    Deny from abc.com
+    Allow from apache.org
+</Directory> 
+
+上述代码实现禁止abc.com域中主机访问inc目录，允许apache.org域中主机访问inc目录的功能。
+
+2、只允许或禁止某个IP进行目录访问
+
+ <Directory /var/www/www.leapsoul.cn/inc>
+    Order Deny,Allow
+    Deny from 10.1.1.2
+    Allow from 192.168.1.0/255.255.255.0
+</Directory> 
+
+上述代码实现禁止IP10.1.1.2访问www.leapsoul.cn/inc目录，允许IP192.168.1子网中的主机访问www.leapsoul.cn/inc目录的功能。
+
+注意：Allow from 192.168.1.0/255.255.255.0等同于Allow from 192.168.1或Allow from 192.168.1.0/24
+
+　　至此，通过配置Apache服务器我们可以实现禁止目录访问(列出目录或文件列表)，也可以实现禁止访问单个或者多个目录，更可以对访问者进行控制，比如允许或禁止某个IP或者域名对目录进行访问，这些功能对提高和优化WEB服务器的安全性能是必不可少的方法。
+
+------------------------------------------------------------------------
+
+php实现伪静态的方法
+
+mod_rewrite是Apache的一个非常强大的功能，它可以实现伪静态页面。下面我详细说说它的使用方法
+1.检测Apache是否支持mod_rewrite
+通过php提供的phpinfo()函数查看环境配置，通过Ctrl+F查找到“Loaded Modules”，其中列出了所有apache2handler已经开启的模块，如果里面包括“mod_rewrite”，则已经支持，不再需要继续设置。
+如果没有开启“mod_rewrite”，则打开目录 您的apache安装目录“/apache/conf/” 下的 httpd.conf 文件，通过Ctrl+F查找到“LoadModule rewrite_module”，将前面的”#”号删除即可。
+如果没有查找到，则到“LoadModule” 区域，在最后一行加入“LoadModule rewrite_module ,modules/mod_rewrite.so”（必选独占一行），然后重启apache服务器即可。
+
+2.让apache服务器支持.htaccess
+如何让自己的本地APACHE服务器支持”.htaccess”呢?其实只要简单修改一下apache的httpd.conf设置就可以让 APACHE支 持.htaccess了。打开httpd.conf文件(在那里? APACHE目录的CONF目录里面),
+用文本编辑器打开后,查找
+Options FollowSymLinks
+AllowOverride None
+改为
+Options FollowSymLinks
+AllowOverride All
+就可以了。
+
+3.建立.htaccess 文件
+有1种最简单的方法建立.htaccess文件：
+用记事本 打开，点击文件–另存为，在文件名窗口输入”.htaccess”，注意是整个绿色部分，
+也就是包含英文引号，然后点击保存就行了。
+
+4.rewrite规则学习
+我们新建一个.htaccess文件之后，就在里面写入以下内容：
+RewriteEngine on #rewriteengine为重写引擎开关on为开启off为关闭
+RewriteRule ([0-9]{1,})$index.php?id=$1
+我讲解一下RewriteRule：RewriteRule是重写规则，支持正则表达式的，上面的([0-9]{1,})是指由数
+字组成的，$是结束标志，说明是以数字结束！
+好吧，现在我们可以实现伪静态页面了，写下一下的规则：
+RewriteEngine on
+RewriteRule ([a-zA-Z]{1,})-([0-9]{1,}).html$index.php?action=$1&id=$2
+([a-zA-Z]{1,})-([0-9]{1,}).html$是规则，index.php?action=$1&id=$2是要替换的格式，$1代表第
+一个括号匹配的值，$2代表第二个，如此类推！！
+
+我们写一个处理的PHP脚本：
+index.php
+PHP代码
+echo ‘你的Action是：’ . $_GET['action'];
+echo ‘
+’;
+echo ‘你的ID是：’ . $_GET['id'];
+?>
+好了，我们现在在浏览器中输入：
+localhost/page-18.html
+输出的是：
+你的Action是：page
+你的ID是：18
+

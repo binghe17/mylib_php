@@ -1,0 +1,5 @@
+[06-Dec-2012 06:55:40] PHP Warning:  gettype() expects exactly 1 parameter, 0 given in /Applications/MAMP/htdocs/0906/DevSystem/mysql/url/errorlog.php on line 52
+[06-Dec-2012 06:55:40] PHP Fatal error:  Call to undefined function getTpe() in /Applications/MAMP/htdocs/0906/DevSystem/mysql/url/errorlog.php on line 53
+[06-Dec-2012 06:59:05] PHP Notice:  A custom error has been triggered in /Applications/MAMP/htdocs/0906/DevSystem/mysql/url/errorlog.php on line 55
+[06-Dec-2012 06:59:29] PHP Notice:  自定义的错误信息 in /Applications/MAMP/htdocs/0906/DevSystem/mysql/url/errorlog.php on line 55
+[06-Dec-2012 06:59:44] PHP Notice:  自定义的错误信息 in /Applications/MAMP/htdocs/0906/DevSystem/mysql/url/errorlog.php on line 55
